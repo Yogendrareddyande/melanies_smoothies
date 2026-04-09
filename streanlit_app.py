@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 st.title(":cup_with_straw: Customize Your Smoothie")
 st.write("Choose the fruits you want in your custom smoothie")
 
