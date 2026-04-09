@@ -1,88 +1,60 @@
 import streamlit as st
-
+import pandas as pd
 import requests
 
-import pandas as pd
- 
 st.title(":cup_with_straw: Customize Your Smoothie")
-
 st.write("Choose the fruits you want in your custom smoothie")
- 
+
 name_on_order = st.text_input("Name on smoothie:")
- 
+
 try:
-
     cnx = st.connection("snowflake")
-
     session = cnx.session()
- 
-    my_dataframe = session.sql("""
 
-        SELECT FRUIT_NAME, SEARCH_ON
-
+    fruit_df = session.sql("""
+        SELECT FRUIT_NAME
         FROM SMOOTHIES.PUBLIC.FRUIT_OPTIONS
-
         ORDER BY FRUIT_NAME
-
     """).to_pandas()
- 
-    pd_df = my_dataframe
- 
+
+    st.dataframe(fruit_df, use_container_width=True)
+
     ingredients_list = st.multiselect(
-
         "Choose up to 5 ingredients:",
-
-        my_dataframe["FRUIT_NAME"].tolist(),
-
+        fruit_df["FRUIT_NAME"].tolist(),
         max_selections=5
-
     )
- 
+
     if ingredients_list:
+        selected_fruit = ingredients_list[0]
 
-        ingredients_string = ""
+        if st.button("Get Nutrition Info"):
+            url = f"https://my.smoothiefroot.com/api/fruit/{selected_fruit.lower()}"
+            response = requests.get(url)
 
-        for fruit_chosen in ingredients_list:
-
-            ingredients_string += fruit_chosen + " "
- 
-            search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
-
-            st.write('The search value for ', fruit_chosen, ' is ', search_on, '.')
- 
-            smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{search_on}")
-
-            st.subheader(fruit_chosen + " Nutrition Info")
-
-            st.json(smoothiefroot_response.json())
- 
-        if st.button("Submit Order"):
-
-            if not name_on_order.strip():
-
-                st.warning("Please enter your name.")
-
+            if response.status_code == 200:
+                st.json(response.json())
             else:
+                st.error("Failed to fetch data")
 
-                safe_name = name_on_order.replace("'", "''")
+    if st.button("Submit Order"):
+        if not name_on_order.strip():
+            st.warning("Please enter your name.")
+        elif not ingredients_list:
+            st.warning("Please choose at least one ingredient.")
+        else:
+            ingredients_string = ", ".join(ingredients_list)
+            safe_name = name_on_order.replace("'", "''")
+            safe_ingredients = ingredients_string.replace("'", "''")
 
-                safe_ingredients = ingredients_string.strip().replace("'", "''")
+            insert_sql = f"""
+                INSERT INTO SMOOTHIES.PUBLIC.ORDERS (INGREDIENTS, NAME_ON_ORDER)
+                VALUES ('{safe_ingredients}', '{safe_name}')
+            """
 
-                insert_sql = f"""
+            session.sql(insert_sql).collect()
+            st.success(f"Your Smoothie is ordered, {name_on_order}!", icon="✅")
 
-                    INSERT INTO SMOOTHIES.PUBLIC.ORDERS (INGREDIENTS, NAME_ON_ORDER)
-
-                    VALUES ('{safe_ingredients}', '{safe_name}')
-
-                """
-
-                session.sql(insert_sql).collect()
-
-                st.success(f"Your Smoothie is ordered, {name_on_order}!", icon="✅")
- 
 except Exception as e:
-
     st.error("Connection or query failed")
-
     st.exception(e)
- 
