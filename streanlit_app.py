@@ -29,13 +29,14 @@ try:
         selected_fruit = ingredients_list[0]
 
         if st.button("Get Nutrition Info"):
-            url = f"https://my.smoothiefroot.com/api/fruit/{selected_fruit.lower()}"
-            response = requests.get(url)
+            fruit_name = selected_fruit.strip().lower()
+            url = f"https://smoothiefroot.com/api/fruit/{fruit_name}"
+            response = requests.get(url, timeout=10)
 
             if response.status_code == 200:
                 st.json(response.json())
             else:
-                st.error("Failed to fetch data")
+                st.error(f"Failed to fetch data. Status code: {response.status_code}")
 
     if st.button("Submit Order"):
         if not name_on_order.strip():
