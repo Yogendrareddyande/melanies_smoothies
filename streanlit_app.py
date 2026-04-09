@@ -15,17 +15,9 @@ try:
         FROM SMOOTHIES.PUBLIC.FRUIT_OPTIONS
         ORDER BY FRUIT_NAME
     """).to_pandas()
-if ingredients_list:
-    selected_fruit = ingredients_list[0]
-
-    if st.button("Get Nutrition Info"):
-        url = f"https://my.smoothiefroot.com/api/fruit/{selected_fruit.lower()}"
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            st.json(response.json())
-        else:
-            st.error("Failed to fetch data")
+  
+smoothiefroot_response = requests.get("[https://my.smoothiefroot.com/api/fruit/watermelon](https://my.smoothiefroot.com/api/fruit/watermelon)")  
+st.text(smoothiefroot_response)
     ingredients_list = st.multiselect(
         "Choose up to 5 ingredients:",
         fruit_df["FRUIT_NAME"].tolist(),
