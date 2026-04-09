@@ -15,29 +15,6 @@ try:
         FROM SMOOTHIES.PUBLIC.FRUIT_OPTIONS
         ORDER BY FRUIT_NAME
     """).to_pandas()
-if ingredients_list:
-    ingredients_string = ""
-
-    for fruit_chosen in ingredients_list:
-        ingredients_string += fruit_chosen + " "
-        
-        smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/" + fruit_chosen)
-        sf_df = st.dataframe(data=smoothiefroot_response.json(), use_container_width=True)
-
-    time_to_insert = st.button("Submit Order")
-
-    if time_to_insert:
-        safe_name = name_on_order.replace("'", "''")
-        safe_ingredients = ingredients_string.strip().replace("'", "''")
-
-        my_insert_stmt = f"""
-        INSERT INTO SMOOTHIES.PUBLIC.ORDERS (INGREDIENTS, NAME_ON_ORDER)
-        VALUES ('{safe_ingredients}', '{safe_name}')
-        """
-
-        session.sql(my_insert_stmt).collect()
-        st.success("Your Smoothie is ordered, " + name_on_order + "!", icon="✅")
-    st.dataframe(fruit_df, use_container_width=True)
 
     ingredients_list = st.multiselect(
         "Choose up to 5 ingredients:",
