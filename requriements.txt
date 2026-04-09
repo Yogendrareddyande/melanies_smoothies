@@ -6,4 +6,5 @@ dependencies:
   - snowflake-snowpark-python
 
 snowflake-snowpark-python
+
 snowflake-connector-python
