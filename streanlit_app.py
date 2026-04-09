@@ -10,6 +10,8 @@ name_on_order = st.text_input("Name on smoothie:")
 try:
     cnx = st.connection("snowflake")
     session = cnx.session()
+    my_dataframe = session.table('smoothies.public.fruit_options').select(col('FRUIT_NAME'),col('SEARCH_ON'))
+    
 
     my_dataframe = session.sql("""
         SELECT FRUIT_NAME, SEARCH_ON
